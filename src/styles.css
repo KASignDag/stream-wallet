@@ -14,7 +14,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; min-height: 100vh; }
-button { font: inherit; }
+button { font: inherit; touch-action: manipulation; }
 button:disabled { cursor: not-allowed; }
 
 .page-shell {
@@ -200,6 +200,7 @@ textarea:focus, .text-input:focus, .confirmation-fields input:focus { border-col
 @media (max-width: 520px) {
   .page-shell { padding: 0; display: block; }
   .wallet-frame { width: 100%; height: 100vh; min-height: 100vh; border: 0; border-radius: 0; }
+  textarea, .text-input, .confirmation-fields input { font-size: 16px; }
   @supports (height: 100dvh) {
     .wallet-frame { height: 100dvh; min-height: 100dvh; }
   }
