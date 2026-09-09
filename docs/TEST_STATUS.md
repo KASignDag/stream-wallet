@@ -1,4 +1,4 @@
-# Version 0.3.4 test status
+# Version 0.3.5 test status
 
 This record contains no recovery phrase, secret key or complete wallet address.
 
@@ -22,7 +22,8 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - A nonzero balance with empty itemized history is identified as detected funds rather than incorrectly claiming there has been no activity.
 - QR scanning accepts only a complete ZKAS mainnet address and only prefills the unsigned payment form.
 - Mobile payment and recovery inputs use a 16px minimum font and a bounded initial viewport to prevent persistent iOS form zoom.
-- Native locking follows the actual iOS/Android app lifecycle, so presenting the in-app camera does not clear the viewing session or balance.
+- iOS locking follows the true background event rather than temporary inactive states such as presenting the in-app camera.
+- Amount entry accepts either `0.05` or `.05` and converts both to exact integer sompi.
 - Capacitor 8 migration settings are present for iOS and Android.
 - The iOS app-switcher privacy cover is attached to the active scene window.
 - Personal Apple development-team settings and signing assets are absent from the handoff source.

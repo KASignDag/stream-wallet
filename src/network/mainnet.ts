@@ -107,9 +107,9 @@ export function minRelayFeeForSpends(spends: number): bigint {
 
 export function parseZkasAmount(value: string): bigint | null {
   const clean = value.trim();
-  if (!/^(?:0|[1-9]\d*)(?:\.\d{1,8})?$/.test(clean)) return null;
+  if (!/^(?:(?:0|[1-9]\d*)(?:\.\d{1,8})?|\.\d{1,8})$/.test(clean)) return null;
   const [whole, fraction = ""] = clean.split(".");
-  const sompi = BigInt(whole) * SOMPI_PER_ZKAS + BigInt(fraction.padEnd(8, "0"));
+  const sompi = BigInt(whole || "0") * SOMPI_PER_ZKAS + BigInt(fraction.padEnd(8, "0"));
   return sompi > 0n ? sompi : null;
 }
 

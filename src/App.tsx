@@ -102,6 +102,7 @@ export function App({
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
   const [scanning, setScanning] = useState(false);
   const syncInFlight = useRef(false);
+  const scannerInFlight = useRef(false);
   const lockEpoch = useRef(0);
   const screenContent = useRef<HTMLDivElement>(null);
 
@@ -129,15 +130,19 @@ export function App({
     setPrepared(null);
     setSubmitResult(null);
     setSendStep("compose");
+    setError("");
   }, []);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       let disposed = false;
       let listener: PluginListenerHandle | undefined;
-      void CapacitorApp.addListener("appStateChange", ({ isActive }) => {
-        if (!isActive) lockWallet();
-      }).then((handle) => {
+      const listenerPromise = Capacitor.getPlatform() === "ios"
+        ? CapacitorApp.addListener("pause", lockWallet)
+        : CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+          if (!isActive && !scannerInFlight.current) lockWallet();
+        });
+      void listenerPromise.then((handle) => {
         if (disposed) void handle.remove();
         else listener = handle;
       });
@@ -362,6 +367,7 @@ export function App({
   async function scanRecipient() {
     if (!unlocked || scanning) return;
     setError("");
+    scannerInFlight.current = true;
     setScanning(true);
     try {
       const scanned = await scanner.scanAddress();
@@ -374,6 +380,7 @@ export function App({
       const message = errorMessage(reason);
       if (!/cancel(?:led|ed)?/i.test(message)) setError(message);
     } finally {
+      scannerInFlight.current = false;
       setScanning(false);
     }
   }
@@ -548,7 +555,7 @@ export function App({
         {walletSheet === "receive" && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="receive-title"><SheetClose onClose={() => setWalletSheet(null)} /><div className="setup-icon"><ArrowDownLeft /></div><span className="eyebrow">RECEIVE ON MAINNET</span><h2 id="receive-title">Your ZKAS address</h2><p>Send only ZKAS on the ZKAS mainnet to this address. Verify the first and last characters before using it.</p><button className="full-address" type="button" onClick={copyAddress}>{address}</button>{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" onClick={copyAddress}>{copied ? <Check size={18} /> : <Copy size={18} />} {copied ? "Copied" : "Copy address"}</button></section></div>}
 
         {walletSheet === "send" && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="send-title"><SheetClose disabled={sendStep === "preparing" || sendStep === "signing"} onClose={() => { setWalletSheet(null); setError(""); }} />
-          {sendStep === "compose" && <><span className="eyebrow">LIVE MAINNET PAYMENT</span><h2 id="send-title">Send ZKAS</h2><p>Available: {formatSompi(spendableSompi)} ZKAS. The network fee is calculated before you approve the payment.</p><label className="field-label" htmlFor="send-address">Recipient address</label><textarea id="send-address" value={sendTo} onChange={(event) => setSendTo(event.target.value.trim())} rows={3} autoCapitalize="none" autoCorrect="off" autoComplete="off" spellCheck={false} placeholder="zkas:…" /><label className="field-label" htmlFor="send-amount">Amount in ZKAS</label><input id="send-amount" className="text-input" inputMode="decimal" value={sendAmount} onChange={(event) => setSendAmount(event.target.value.replace(/[^0-9.]/g, ""))} placeholder="1.00" />{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" disabled={!sendTo || !sendAmount} onClick={prepareSend}>Calculate fee and review <ChevronRight size={18} /></button></>}
+          {sendStep === "compose" && <><span className="eyebrow">LIVE MAINNET PAYMENT</span><h2 id="send-title">Send ZKAS</h2><p>Available: {formatSompi(spendableSompi)} ZKAS. The network fee is calculated before you approve the payment.</p><label className="field-label" htmlFor="send-address">Recipient address</label><textarea id="send-address" value={sendTo} onChange={(event) => { setSendTo(event.target.value.trim()); setError(""); }} rows={3} autoCapitalize="none" autoCorrect="off" autoComplete="off" spellCheck={false} placeholder="zkas:…" /><label className="field-label" htmlFor="send-amount">Amount in ZKAS</label><input id="send-amount" className="text-input" inputMode="decimal" value={sendAmount} onChange={(event) => { setSendAmount(event.target.value.replace(/[^0-9.]/g, "")); setError(""); }} placeholder="1.00" />{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" disabled={!sendTo || !sendAmount} onClick={prepareSend}>Calculate fee and review <ChevronRight size={18} /></button></>}
           {sendStep === "preparing" && <LoadingStep title="Preparing private payment" text="The viewing service is building the unsigned proof. No spend key has been released." />}
           {sendStep === "review" && prepared && <><span className="eyebrow">FINAL REVIEW</span><h2 id="send-title">Check every detail</h2><div className="payment-review"><div><span>Recipient</span><strong className="review-address">{prepared.to}</strong></div><div><span>Amount</span><strong>{formatSompi(prepared.amountSompi)} ZKAS</strong></div><div><span>Network fee</span><strong>{formatSompi(prepared.feeSompi)} ZKAS</strong></div><div><span>Total leaving wallet</span><strong>{formatSompi(prepared.amountSompi + prepared.feeSompi)} ZKAS</strong></div></div><div className="seed-warning"><ShieldCheck /> Device authentication releases account 0 only long enough to verify and sign this exact payment.</div>{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" onClick={authorizeAndSend}><Fingerprint size={18} /> Authenticate and broadcast</button><button className="secondary-action" type="button" onClick={() => { setPrepared(null); setSendStep("compose"); }}>Go back without signing</button></>}
           {sendStep === "signing" && <LoadingStep title="Verifying and broadcasting" text="Stream Wallet is checking recipient, amount, change and fee before signing on this device." />}

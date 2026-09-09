@@ -39,6 +39,7 @@ describe("mainnet amount and fee safety", () => {
   it("parses ZKAS only once into exact integer sompi", () => {
     expect(parseZkasAmount("1")).toBe(100_000_000n);
     expect(parseZkasAmount("0.00000001")).toBe(1n);
+    expect(parseZkasAmount(".05")).toBe(5_000_000n);
     expect(parseZkasAmount("1.23456789")).toBe(123_456_789n);
     expect(parseZkasAmount("1.234567891")).toBeNull();
     expect(parseZkasAmount("1e2")).toBeNull();
