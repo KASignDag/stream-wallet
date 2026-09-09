@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { App, type NetworkApi, type SignerApi } from "./App";
 import type { PreparedPayment, WalletStatus } from "./network/mainnet";
 import type { SecureVaultApi } from "./vault/secureVault";
+import type { QrScannerApi } from "./scanner/qrScanner";
 
 afterEach(cleanup);
 
@@ -171,6 +172,33 @@ describe("Stream Wallet mainnet flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Activity" }));
     expect(await screen.findByRole("heading", { name: "Balance detected" })).toBeInTheDocument();
     expect(screen.getByText(/2 ZKAS is visible.*not provided an itemized transaction record/i)).toBeInTheDocument();
+  });
+
+  it("uses a valid scanned address only to prefill the unsigned payment form", async () => {
+    const { vault, signer, network } = dependencies(true);
+    const scanner: QrScannerApi = { scanAddress: vi.fn().mockResolvedValue(RECIPIENT) };
+    render(<App vault={vault} signer={signer} network={network} scanner={scanner} />);
+    fireEvent.click(await screen.findByRole("button", { name: /unlock wallet/i }));
+    await screen.findByText("Ready on ZKAS mainnet");
+    fireEvent.click(screen.getByRole("button", { name: "Scan" }));
+    expect(await screen.findByDisplayValue(RECIPIENT)).toBeInTheDocument();
+    expect(screen.getByLabelText("Amount in ZKAS")).toHaveValue("");
+    expect(network.prepare).not.toHaveBeenCalled();
+    expect(vault.authorize).not.toHaveBeenCalled();
+    expect(network.submit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a scanned QR code that is not a ZKAS mainnet address", async () => {
+    const { vault, signer, network } = dependencies(true);
+    const scanner: QrScannerApi = { scanAddress: vi.fn().mockResolvedValue("https://example.com") };
+    render(<App vault={vault} signer={signer} network={network} scanner={scanner} />);
+    fireEvent.click(await screen.findByRole("button", { name: /unlock wallet/i }));
+    await screen.findByText("Ready on ZKAS mainnet");
+    fireEvent.click(screen.getByRole("button", { name: "Scan" }));
+    expect(await screen.findByText(/does not contain a complete ZKAS mainnet address/i)).toBeInTheDocument();
+    expect(network.prepare).not.toHaveBeenCalled();
+    expect(vault.authorize).not.toHaveBeenCalled();
+    expect(network.submit).not.toHaveBeenCalled();
   });
 
   it("returns shared content to the top when changing tabs", async () => {

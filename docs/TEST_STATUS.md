@@ -1,4 +1,4 @@
-# Version 0.3.1 test status
+# Version 0.3.2 test status
 
 This record contains no recovery phrase, secret key or complete wallet address.
 
@@ -20,6 +20,7 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - iPhone safe-area insets are applied to the header, banner, content, sheets and bottom navigation.
 - Tab changes reset the shared content area to the top.
 - A nonzero balance with empty itemized history is identified as detected funds rather than incorrectly claiming there has been no activity.
+- QR scanning accepts only a complete ZKAS mainnet address and only prefills the unsigned payment form.
 - Capacitor 8 migration settings are present for iOS and Android.
 - The iOS app-switcher privacy cover is attached to the active scene window.
 - Personal Apple development-team settings and signing assets are absent from the handoff source.
@@ -30,6 +31,7 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - Confirm the header no longer overlaps the clock, Dynamic Island or status indicators.
 - Background the app and confirm its app-switcher preview is fully obscured.
 - Confirm Face ID lock and unlock after backgrounding.
+- Scan a known ZKAS address QR code, deny/cancel camera access once, and verify no scan can prepare or send a payment automatically.
 - Wait until the received test coin is spendable, then complete a small send-back and verify recipient, amount, fee and both histories.
 - Authenticate wallet removal, reinstall or relaunch, restore from the paper phrase and confirm the identical full account 0 address and balance.
 - Run the hostile prepared-bundle test against the release signer.

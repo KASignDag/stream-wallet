@@ -22,6 +22,10 @@ Normal internet metadata, including an IP address and request timing, is necessa
 
 The app source contains no analytics SDK, advertising SDK or third-party tracking script. A publisher must update this notice and the store privacy disclosures before adding any such service.
 
+## Camera access
+
+Camera access is used only when the user chooses Scan to read a ZKAS payment-address QR code. The scanned value is validated on the device and only prefills the recipient field; scanning cannot select an amount, sign or broadcast a payment. The app does not save photographs or video.
+
 ## Support and responsible publishing
 
 The distributing organization must add its legal name, contact method, service retention policy and privacy-policy URL before submitting the app to a store. This source notice is a technical baseline and is not a substitute for the publisher's legal review.

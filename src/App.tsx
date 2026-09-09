@@ -13,6 +13,7 @@ import {
   type SubmitResult, type WalletConnection, type WalletHistory, type WalletStatus,
 } from "./network/mainnet";
 import { secureVault, type SecureVaultApi, type VaultStatus } from "./vault/secureVault";
+import { qrScanner, type QrScannerApi } from "./scanner/qrScanner";
 import { confirmationMatches, normalizeMnemonic, pickConfirmationPositions, shortAddress } from "./wallet/setup";
 
 type Tab = "home" | "activity" | "security";
@@ -47,6 +48,7 @@ interface AppProps {
   vault?: SecureVaultApi;
   signer?: SignerApi;
   network?: NetworkApi;
+  scanner?: QrScannerApi;
   confirmationPositions?: number[];
 }
 
@@ -68,6 +70,7 @@ export function App({
   vault = secureVault,
   signer = defaultSigner,
   network = mainnetApi,
+  scanner = qrScanner,
   confirmationPositions,
 }: AppProps) {
   const [tab, setTab] = useState<Tab>("home");
@@ -95,6 +98,7 @@ export function App({
   const [sendAmount, setSendAmount] = useState("");
   const [prepared, setPrepared] = useState<PreparedPayment | null>(null);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
+  const [scanning, setScanning] = useState(false);
   const syncInFlight = useRef(false);
   const lockEpoch = useRef(0);
   const screenContent = useRef<HTMLDivElement>(null);
@@ -328,14 +332,33 @@ export function App({
     }
   }
 
-  function openSend() {
+  function openSend(recipient = "") {
     setError("");
     setSendStep("compose");
-    setSendTo("");
+    setSendTo(recipient);
     setSendAmount("");
     setPrepared(null);
     setSubmitResult(null);
     setWalletSheet("send");
+  }
+
+  async function scanRecipient() {
+    if (!unlocked || scanning) return;
+    setError("");
+    setScanning(true);
+    try {
+      const scanned = await scanner.scanAddress();
+      if (!scanned) return;
+      if (!isMainnetAddress(scanned)) {
+        throw new Error("That QR code does not contain a complete ZKAS mainnet address.");
+      }
+      openSend(scanned);
+    } catch (reason) {
+      const message = errorMessage(reason);
+      if (!/cancel(?:led|ed)?/i.test(message)) setError(message);
+    } finally {
+      setScanning(false);
+    }
   }
 
   async function prepareSend() {
@@ -438,8 +461,8 @@ export function App({
 
               <div className="quick-actions" aria-label="Wallet actions">
                 <button type="button" disabled={!unlocked} onClick={() => { setError(""); setWalletSheet("receive"); }}><span><ArrowDownLeft size={20} /></span>Receive</button>
-                <button type="button" disabled={!unlocked || !walletReady} onClick={openSend}><span><ArrowUpRight size={20} /></span>Send</button>
-                <button type="button" disabled title="Camera scanning is planned after the mainnet pilot"><span><ScanLine size={20} /></span>Scan</button>
+                <button type="button" disabled={!unlocked || !walletReady} onClick={() => openSend()}><span><ArrowUpRight size={20} /></span>Send</button>
+                <button type="button" disabled={!unlocked || scanning} onClick={scanRecipient}><span>{scanning ? <LoaderCircle className="spin" size={20} /> : <ScanLine size={20} />}</span>Scan</button>
                 <button type="button" disabled title="Payment requests are planned after the mainnet pilot"><span><QrCode size={20} /></span>Request</button>
               </div>
 
