@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { App as CapacitorApp } from "@capacitor/app";
+import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import {
   Activity, ArrowDownLeft, ArrowUpRight, Check, ChevronLeft, ChevronRight, Copy, Eye, EyeOff,
   Fingerprint, Home, KeyRound, LoaderCircle, LockKeyhole, QrCode, RefreshCw, ScanLine,
@@ -130,6 +132,21 @@ export function App({
   }, []);
 
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      let disposed = false;
+      let listener: PluginListenerHandle | undefined;
+      void CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+        if (!isActive) lockWallet();
+      }).then((handle) => {
+        if (disposed) void handle.remove();
+        else listener = handle;
+      });
+      return () => {
+        disposed = true;
+        if (listener) void listener.remove();
+      };
+    }
+
     const lockWhenHidden = () => {
       if (document.visibilityState !== "visible") lockWallet();
     };

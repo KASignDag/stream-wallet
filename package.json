@@ -1,7 +1,7 @@
 {
   "name": "stream-wallet",
   "private": true,
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "A mobile-first, non-custodial community wallet for ZKAS.",
   "license": "ISC",
   "type": "module",
@@ -16,7 +16,9 @@
     "verify:signer": "node scripts/check-signer-inline.mjs"
   },
   "dependencies": {
+    "@capacitor/app": "^8.0.1",
     "@capacitor/android": "^8.5.1",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/barcode-scanner": "^3.1.2",
     "@capacitor/core": "^8.5.1",
     "@capacitor/ios": "^8.5.1",
