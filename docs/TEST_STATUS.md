@@ -1,0 +1,35 @@
+# Version 0.3 test status
+
+This record contains no recovery phrase, secret key or complete wallet address.
+
+## Verified on the earlier iPhone pilot
+
+- The app installed and ran on a physical iPhone.
+- A wallet created by Stream Wallet restored in the official ZKAS wallet with the same account 0 address.
+- Device-authenticated lock and unlock worked.
+- A 1 ZKAS mainnet receive appeared in the official wallet and later synchronized into Stream Wallet.
+- The synchronized wallet showed 1 total and 1 maturing while the spendable balance remained 0, as expected during maturity.
+- Automatic status polling updated the balance without a manual refresh button.
+
+## Verified in the version 0.3 source review
+
+- Automated web tests pass.
+- The production bundle builds and the pinned signer hash check passes.
+- The npm dependency audit reports zero known vulnerabilities.
+- iPhone safe-area insets are applied to the header, banner, content, sheets and bottom navigation.
+- Capacitor 8 migration settings are present for iOS and Android.
+- The iOS app-switcher privacy cover is attached to the active scene window.
+- Personal Apple development-team settings and signing assets are absent from the handoff source.
+
+## Must be completed on version 0.3 before external beta use
+
+- Build and run on a physical iPhone with Xcode 26 or newer.
+- Confirm the header no longer overlaps the clock, Dynamic Island or status indicators.
+- Background the app and confirm its app-switcher preview is fully obscured.
+- Confirm Face ID lock and unlock after backgrounding.
+- Wait until the received test coin is spendable, then complete a small send-back and verify recipient, amount, fee and both histories.
+- Authenticate wallet removal, reinstall or relaunch, restore from the paper phrase and confirm the identical full account 0 address and balance.
+- Run the hostile prepared-bundle test against the release signer.
+- Complete independent security review before describing the wallet as ready for unrestricted mainnet use.
+
+Android remains unverified on a physical device.
