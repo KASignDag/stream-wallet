@@ -1,7 +1,7 @@
 {
   "name": "stream-wallet",
   "private": true,
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "A mobile-first, non-custodial community wallet for ZKAS.",
   "license": "ISC",
   "type": "module",
@@ -22,6 +22,7 @@
     "@capacitor/core": "^8.5.1",
     "@capacitor/ios": "^8.5.1",
     "lucide-react": "^1.43.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

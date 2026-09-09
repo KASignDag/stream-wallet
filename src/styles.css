@@ -90,6 +90,8 @@ button:disabled { cursor: not-allowed; }
 .secondary-action, .danger-action, .danger-confirm { width: 100%; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 15px; font-weight: 800; cursor: pointer; }
 .secondary-action { color: #bdf5e6; border: 1px solid rgba(83, 227, 190, .3); background: rgba(54, 218, 176, .08); }
 .scan-address-action { margin: 9px 0 16px; }
+.receive-qr { width: fit-content; margin: 15px auto; padding: 8px; line-height: 0; background: #fff; border-radius: 17px; box-shadow: 0 0 0 1px rgba(255,255,255,.16); }
+.receive-qr svg { display: block; width: min(216px, 62vw); height: auto; }
 .danger-action { color: #ffb5b0; border: 1px solid rgba(255, 115, 105, .27); background: rgba(255, 91, 80, .06); }
 .danger-confirm { margin-top: 16px; color: #fff; border: 1px solid #ee6259; background: #b63f38; }
 .secondary-action:disabled, .danger-confirm:disabled { opacity: .48; cursor: not-allowed; }

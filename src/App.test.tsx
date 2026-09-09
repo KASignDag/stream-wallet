@@ -166,6 +166,7 @@ describe("Stream Wallet mainnet flow", () => {
     expect(receive).toBeEnabled();
     fireEvent.click(receive);
     expect(screen.getByText(ADDRESS)).toBeInTheDocument();
+    expect(screen.getByTitle("ZKAS receiving address QR code")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /copy full address/i })).toBeInTheDocument();
   });
 

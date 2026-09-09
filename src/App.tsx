@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
+import { QRCodeSVG } from "qrcode.react";
 import {
   Activity, ArrowDownLeft, ArrowUpRight, Check, ChevronLeft, ChevronRight, Copy, Eye, EyeOff,
   Fingerprint, Home, KeyRound, LoaderCircle, LockKeyhole, RefreshCw, ScanLine,
@@ -612,7 +613,7 @@ export function App({
           </section></div>
         )}
 
-        {walletSheet === "receive" && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="receive-title"><SheetClose onClose={() => setWalletSheet(null)} /><div className="setup-icon"><ArrowDownLeft /></div><span className="eyebrow">RECEIVE ON MAINNET</span><h2 id="receive-title">Your ZKAS address</h2><p>Your complete receiving address is displayed below. Tap the address or the Copy button, then verify its first and last characters before sending.</p><button className="full-address" type="button" onClick={copyAddress}>{address}</button>{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" onClick={copyAddress}>{copied ? <Check size={18} /> : <Copy size={18} />} {copied ? "Address copied" : "Copy full address"}</button></section></div>}
+        {walletSheet === "receive" && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="receive-title"><SheetClose onClose={() => setWalletSheet(null)} /><div className="setup-icon"><ArrowDownLeft /></div><span className="eyebrow">RECEIVE ON MAINNET</span><h2 id="receive-title">Your ZKAS address</h2><p>Let the sender scan this QR code, or copy the complete address below. Always verify the first and last characters before sending.</p><div className="receive-qr"><QRCodeSVG value={address} size={216} level="M" marginSize={2} bgColor="#ffffff" fgColor="#041b15" title="ZKAS receiving address QR code" /></div><button className="full-address" type="button" onClick={copyAddress}>{address}</button>{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" onClick={copyAddress}>{copied ? <Check size={18} /> : <Copy size={18} />} {copied ? "Address copied" : "Copy full address"}</button></section></div>}
 
         {walletSheet === "recovery" && recoveryPhrase && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="recovery-title"><SheetClose onClose={closeRecoveryPhrase} /><span className="eyebrow">PRIVATE WALLET BACKUP</span><h2 id="recovery-title">Your recovery phrase</h2><div className="seed-warning"><ShieldCheck /> Anyone who sees these words can take every ZKAS in this wallet. Keep them offline and never share a screenshot.</div><ol className="word-grid">{recoveryPhrase.split(" ").map((word, index) => <li key={`${word}-${index}`}><span>{index + 1}</span>{word}</li>)}</ol><p>Confirm that your written backup matches these 12 words in this exact order.</p><button className="primary-action" type="button" onClick={closeRecoveryPhrase}><Check size={18} /> I verified my backup</button></section></div>}
 
