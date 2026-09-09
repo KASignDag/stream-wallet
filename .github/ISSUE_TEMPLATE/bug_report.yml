@@ -1,0 +1,47 @@
+name: Bug report
+description: Report reproducible wallet behavior without sharing private data
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Never include a recovery phrase, private key, unredacted backup or signing credential."
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened and what did you expect?
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [iOS, Android, Web preview]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version and build
+      placeholder: 0.3.11 (14)
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Redacted logs or screenshots
+      description: Remove full addresses, transaction metadata and all secrets.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I did not include a recovery phrase, seed, private key or signing credential.
+          required: true
