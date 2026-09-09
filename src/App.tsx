@@ -3,7 +3,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import {
   Activity, ArrowDownLeft, ArrowUpRight, Check, ChevronLeft, ChevronRight, Copy, Eye, EyeOff,
-  Fingerprint, Home, KeyRound, LoaderCircle, LockKeyhole, QrCode, RefreshCw, ScanLine,
+  Fingerprint, Home, KeyRound, LoaderCircle, LockKeyhole, RefreshCw, ScanLine,
   ShieldCheck, Trash2, WalletCards, X,
 } from "lucide-react";
 import {
@@ -547,7 +547,6 @@ export function App({
                 <button type="button" disabled={!unlocked} onClick={() => { setError(""); setWalletSheet("receive"); }}><span><ArrowDownLeft size={20} /></span>Receive</button>
                 <button type="button" disabled={!unlocked || !walletReady || !hasSpendableFunds} onClick={() => openSend()}><span><ArrowUpRight size={20} /></span>Send</button>
                 <button type="button" disabled={!unlocked || scanning} onClick={scanRecipient}><span>{scanning ? <LoaderCircle className="spin" size={20} /> : <ScanLine size={20} />}</span>Scan</button>
-                <button type="button" disabled title="Payment requests are planned after the mainnet pilot"><span><QrCode size={20} /></span>Request</button>
               </div>
 
               {!hasWallet && (

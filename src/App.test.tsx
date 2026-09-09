@@ -103,9 +103,10 @@ describe("Stream Wallet mainnet flow", () => {
     render(<App vault={vault} signer={signer} network={network} />);
     expect(screen.getByText("Live ZKAS mainnet.")).toBeInTheDocument();
     expect(screen.getByText("ZKAS mainnet")).toBeInTheDocument();
-    for (const action of ["Receive", "Send", "Scan", "Request"]) {
+    for (const action of ["Receive", "Send", "Scan"]) {
       expect(screen.getByRole("button", { name: action })).toBeDisabled();
     }
+    expect(screen.queryByRole("button", { name: "Request" })).not.toBeInTheDocument();
   });
 
   it("creates official account material and saves only after backup confirmation", async () => {
