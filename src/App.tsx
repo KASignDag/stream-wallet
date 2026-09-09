@@ -111,6 +111,7 @@ export function App({
   const [scanning, setScanning] = useState(false);
   const syncInFlight = useRef(false);
   const scannerInFlight = useRef(false);
+  const authenticationInFlight = useRef(false);
   const lockEpoch = useRef(0);
   const screenContent = useRef<HTMLDivElement>(null);
 
@@ -150,7 +151,7 @@ export function App({
       const listenerPromise = Capacitor.getPlatform() === "ios"
         ? CapacitorApp.addListener("pause", lockWallet)
         : CapacitorApp.addListener("appStateChange", ({ isActive }) => {
-          if (!isActive && !scannerInFlight.current) lockWallet();
+          if (!isActive && !scannerInFlight.current && !authenticationInFlight.current) lockWallet();
         });
       void listenerPromise.then((handle) => {
         if (disposed) void handle.remove();
@@ -312,6 +313,7 @@ export function App({
       return;
     }
     setSetupStep("saving");
+    authenticationInFlight.current = true;
     try {
       const accountSeed = await signer.accountSeedHex(draft.mnemonic, 0);
       const viewingKey = await signer.fvkHex(accountSeed);
@@ -341,12 +343,15 @@ export function App({
     } catch (reason) {
       setError(errorMessage(reason));
       setSetupStep("confirm");
+    } finally {
+      authenticationInFlight.current = false;
     }
   }
 
   async function unlockWallet() {
     setBusy(true);
     setError("");
+    authenticationInFlight.current = true;
     try {
       const result = await vault.unlock();
       if (address && result.address !== address) throw new Error("Vault address verification failed.");
@@ -355,6 +360,7 @@ export function App({
     } catch (reason) {
       setError(errorMessage(reason));
     } finally {
+      authenticationInFlight.current = false;
       setBusy(false);
     }
   }
@@ -363,6 +369,7 @@ export function App({
     if (removeText !== "DELETE") return;
     setBusy(true);
     setError("");
+    authenticationInFlight.current = true;
     try {
       const result = await vault.remove();
       if (!result.removed) throw new Error("The vault did not confirm removal.");
@@ -379,6 +386,7 @@ export function App({
     } catch (reason) {
       setError(errorMessage(reason));
     } finally {
+      authenticationInFlight.current = false;
       setBusy(false);
     }
   }
@@ -446,6 +454,7 @@ export function App({
     if (!connection || !prepared) return;
     setError("");
     setSendStep("signing");
+    authenticationInFlight.current = true;
     try {
       const authorization = await vault.authorize();
       if (authorization.address !== connection.address) throw new Error("Device authorization returned a different wallet.");
@@ -471,6 +480,8 @@ export function App({
       setPrepared(null);
       setError(errorMessage(reason));
       setSendStep("compose");
+    } finally {
+      authenticationInFlight.current = false;
     }
   }
 
@@ -488,6 +499,7 @@ export function App({
     setBusy(true);
     setError("");
     setRecoveryPhrase("");
+    authenticationInFlight.current = true;
     try {
       const recovery = await vault.revealRecovery();
       if (recovery.address !== address) throw new Error("Device authentication returned a different wallet.");
@@ -496,6 +508,7 @@ export function App({
     } catch (reason) {
       setError(errorMessage(reason));
     } finally {
+      authenticationInFlight.current = false;
       setBusy(false);
     }
   }

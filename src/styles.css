@@ -145,7 +145,7 @@ button:disabled { cursor: not-allowed; }
 .history-list small { overflow: hidden; margin-top: 3px; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .history-list b { font-size: 11px; text-align: right; }
 
-.bottom-nav { position: absolute; inset: auto 0 0; z-index: 3; display: grid; grid-template-columns: repeat(3, 1fr); padding: 10px calc(14px + env(safe-area-inset-right, 0px)) calc(11px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px)); background: rgba(6, 21, 17, .93); border-top: 1px solid var(--line); backdrop-filter: blur(18px); }
+.bottom-nav { position: absolute; inset: auto 0 0; z-index: 3; display: grid; grid-template-columns: repeat(3, 1fr); padding: 10px calc(14px + env(safe-area-inset-right, 0px)) calc(11px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px)); background: #061511; border-top: 1px solid var(--line); }
 .bottom-nav button { appearance: none; border: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #718e86; background: transparent; font-size: 10px; cursor: pointer; }
 .bottom-nav svg { width: 20px; }
 .bottom-nav button.active { color: var(--mint); }
