@@ -163,6 +163,9 @@ export function App({
   const address = vaultStatus?.address ?? "";
   const balanceSompi = networkStatus?.balance_sompi ?? "0";
   const spendableSompi = networkStatus?.spendable_sompi ?? balanceSompi;
+  const maturingSompi = networkStatus?.maturing_sompi ?? "0";
+  const hasSpendableFunds = BigInt(spendableSompi || "0") > 0n;
+  const hasMaturingFunds = BigInt(maturingSompi || "0") > 0n;
   const walletReady = Boolean(networkStatus?.synced && (networkStatus.spend_ready ?? true) && !networkStatus.missing_history);
 
   const refreshWallet = useCallback(async (wallet: WalletConnection, registerIfMissing = true) => {
@@ -450,6 +453,7 @@ export function App({
     : networkStatus?.missing_history ? "History incomplete — do not spend"
     : networkStatus?.loading ? "Loading wallet"
     : !networkStatus?.node_connected ? "Mainnet service offline"
+    : walletReady && !hasSpendableFunds && hasMaturingFunds ? "Change maturing · not yet spendable"
     : networkStatus.synced ? (walletReady ? "Ready on ZKAS mainnet" : "Synced · preparing spend state")
     : "Synchronizing mainnet";
   const hasUnlistedFunds = unlocked && !history?.rows.length && BigInt(balanceSompi || "0") > 0n;
@@ -478,14 +482,14 @@ export function App({
                   <button className="icon-button" type="button" onClick={() => setBalanceVisible((value) => !value)} aria-label={balanceVisible ? "Hide balance" : "Show balance"}>{balanceVisible ? <EyeOff size={19} /> : <Eye size={19} />}</button>
                 </div>
                 <strong className="balance-value">{balanceVisible ? `${formatSompi(spendableSompi, 8)} ZKAS` : "••••••"}</strong>
-                <span className="balance-fiat">{unlocked && networkStatus ? `${formatSompi(balanceSompi)} total · ${formatSompi(networkStatus.maturing_sompi ?? "0")} maturing` : "ZKAS mainnet"}</span>
+                <span className="balance-fiat">{unlocked && networkStatus ? `${formatSompi(balanceSompi)} total · ${formatSompi(maturingSompi)} maturing` : "ZKAS mainnet"}</span>
                 <div className={`balance-status ${walletReady ? "ready" : ""}`}><span /> {statusLabel}</div>
                 {unlocked && address && <div className="address-preview"><span>Account 0</span><strong title={address}>{shortAddress(address)}</strong></div>}
               </section>
 
               <div className="quick-actions" aria-label="Wallet actions">
                 <button type="button" disabled={!unlocked} onClick={() => { setError(""); setWalletSheet("receive"); }}><span><ArrowDownLeft size={20} /></span>Receive</button>
-                <button type="button" disabled={!unlocked || !walletReady} onClick={() => openSend()}><span><ArrowUpRight size={20} /></span>Send</button>
+                <button type="button" disabled={!unlocked || !walletReady || !hasSpendableFunds} onClick={() => openSend()}><span><ArrowUpRight size={20} /></span>Send</button>
                 <button type="button" disabled={!unlocked || scanning} onClick={scanRecipient}><span>{scanning ? <LoaderCircle className="spin" size={20} /> : <ScanLine size={20} />}</span>Scan</button>
                 <button type="button" disabled title="Payment requests are planned after the mainnet pilot"><span><QrCode size={20} /></span>Request</button>
               </div>

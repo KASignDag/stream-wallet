@@ -164,6 +164,19 @@ describe("Stream Wallet mainnet flow", () => {
     expect(screen.getByText(ADDRESS)).toBeInTheDocument();
   });
 
+  it("labels maturing change and keeps Send disabled until it is spendable", async () => {
+    const { vault, signer, network } = dependencies(true);
+    vi.mocked(network.status).mockResolvedValue(walletStatus({
+      balance_sompi: "72000000",
+      spendable_sompi: "0",
+      maturing_sompi: "72000000",
+    }));
+    render(<App vault={vault} signer={signer} network={network} />);
+    fireEvent.click(await screen.findByRole("button", { name: /unlock wallet/i }));
+    expect(await screen.findByText("Change maturing · not yet spendable")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+
   it("reports a detected balance honestly when itemized history is unavailable", async () => {
     const { vault, signer, network } = dependencies(true);
     render(<App vault={vault} signer={signer} network={network} />);

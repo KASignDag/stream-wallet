@@ -1,4 +1,4 @@
-# Version 0.3.5 test status
+# Version 0.3.6 test status
 
 This record contains no recovery phrase, secret key or complete wallet address.
 
@@ -11,6 +11,9 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - The synchronized wallet showed 1 total and 1 maturing while the spendable balance remained 0, as expected during maturity.
 - Automatic status polling updated the balance without a manual refresh button.
 - The hosted service returned no itemized rows for the received coin even though it reported the correct balance.
+- QR scan preserved the unlocked 1 ZKAS balance and filled the intended recipient.
+- A physical-iPhone payment of 0.25 ZKAS plus a 0.03 ZKAS fee was reviewed, device-authenticated and broadcast successfully.
+- The expected 0.72 ZKAS change was subsequently detected as maturing.
 
 ## Verified in the version 0.3 source review
 
@@ -24,6 +27,7 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - Mobile payment and recovery inputs use a 16px minimum font and a bounded initial viewport to prevent persistent iOS form zoom.
 - iOS locking follows the true background event rather than temporary inactive states such as presenting the in-app camera.
 - Amount entry accepts either `0.05` or `.05` and converts both to exact integer sompi.
+- Maturing-only funds are labeled as unavailable and cannot open the Send flow.
 - Capacitor 8 migration settings are present for iOS and Android.
 - The iOS app-switcher privacy cover is attached to the active scene window.
 - Personal Apple development-team settings and signing assets are absent from the handoff source.
