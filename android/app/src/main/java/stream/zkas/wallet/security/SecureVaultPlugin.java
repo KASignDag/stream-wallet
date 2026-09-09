@@ -128,20 +128,25 @@ public class SecureVaultPlugin extends Plugin {
 
     @PluginMethod
     public void unlock(PluginCall call) {
-        decryptAfterAuthentication(call, "Unlock Stream Wallet", "Confirm to open this wallet", false, false);
+        decryptAfterAuthentication(call, "Unlock Stream Wallet", "Confirm to open this wallet", false, false, false);
     }
 
     @PluginMethod
     public void authorize(PluginCall call) {
-        decryptAfterAuthentication(call, "Authorize ZKAS payment", "Confirm this mainnet transaction", false, true);
+        decryptAfterAuthentication(call, "Authorize ZKAS payment", "Confirm this mainnet transaction", false, true, false);
+    }
+
+    @PluginMethod
+    public void revealRecovery(PluginCall call) {
+        decryptAfterAuthentication(call, "View recovery phrase", "Confirm to reveal your 12 recovery words", false, false, true);
     }
 
     @PluginMethod
     public void remove(PluginCall call) {
-        decryptAfterAuthentication(call, "Remove Stream Wallet", "Confirm permanent removal from this device", true, false);
+        decryptAfterAuthentication(call, "Remove Stream Wallet", "Confirm permanent removal from this device", true, false, false);
     }
 
-    private void decryptAfterAuthentication(PluginCall call, String title, String subtitle, boolean removeAfter, boolean authorizeSpend) {
+    private void decryptAfterAuthentication(PluginCall call, String title, String subtitle, boolean removeAfter, boolean authorizeSpend, boolean revealRecovery) {
         SharedPreferences prefs = prefs();
         String ciphertext = prefs.getString(FIELD_CIPHERTEXT, null);
         String iv = prefs.getString(FIELD_IV, null);
@@ -201,6 +206,9 @@ public class SecureVaultPlugin extends Plugin {
                     } else if (authorizeSpend) {
                         result.put("address", address);
                         result.put("accountSeedHex", accountSeedHex);
+                    } else if (revealRecovery) {
+                        result.put("address", address);
+                        result.put("mnemonic", mnemonic);
                     } else {
                         result.put("address", address);
                         result.put("fvkHex", fvkHex);

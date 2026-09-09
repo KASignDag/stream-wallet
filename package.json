@@ -1,7 +1,7 @@
 {
   "name": "stream-wallet",
   "private": true,
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "A mobile-first, non-custodial community wallet for ZKAS.",
   "license": "ISC",
   "type": "module",

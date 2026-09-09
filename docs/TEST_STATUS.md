@@ -1,4 +1,4 @@
-# Version 0.3.7 test status
+# Version 0.3.8 test status
 
 This record contains no recovery phrase, secret key or complete wallet address.
 
@@ -29,6 +29,8 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - Amount entry accepts either `0.05` or `.05` and converts both to exact integer sompi.
 - Maturing-only funds are labeled as unavailable and cannot open the Send flow.
 - Successful outgoing payments are saved locally with exact amount, fee, recipient, time and transaction ID.
+- The encrypted native vault exposes the recovery phrase only through a dedicated device-authenticated action; the app clears the displayed phrase when its sheet closes or the wallet locks.
+- Receive displays the complete account 0 address and provides an explicit full-address copy action.
 - Activity clearly states that only outgoing transactions sent after this update appear until the hosted service provides itemized history.
 - Local and hosted records are deduplicated by transaction ID, and local records are deleted with the wallet.
 - Capacitor 8 migration settings are present for iOS and Android.
@@ -41,6 +43,7 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - Confirm the header no longer overlaps the clock, Dynamic Island or status indicators.
 - Background the app and confirm its app-switcher preview is fully obscured.
 - Confirm Face ID lock and unlock after backgrounding.
+- Confirm Face ID is required to reveal the recovery phrase, verify all 12 words match the paper backup, then close the sheet and confirm they disappear.
 - Scan a known ZKAS address QR code, deny/cancel camera access once, and verify no scan can prepare or send a payment automatically.
 - While the scanner is open, background the entire app and confirm the wallet requires authentication when reopened.
 - Open and close Send and Scan repeatedly and confirm the WebView always returns to its normal scale.

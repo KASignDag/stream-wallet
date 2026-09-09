@@ -23,7 +23,7 @@ import { confirmationMatches, normalizeMnemonic, pickConfirmationPositions, shor
 
 type Tab = "home" | "activity" | "security";
 type SetupStep = "choose" | "creating" | "phrase" | "restore" | "confirm" | "saving";
-type WalletSheet = "receive" | "send" | null;
+type WalletSheet = "receive" | "send" | "recovery" | null;
 type SendStep = "compose" | "preparing" | "review" | "signing" | "success";
 
 interface DraftWallet {
@@ -101,6 +101,7 @@ export function App({
   const [removeText, setRemoveText] = useState("");
   const [walletSheet, setWalletSheet] = useState<WalletSheet>(null);
   const [copied, setCopied] = useState(false);
+  const [recoveryPhrase, setRecoveryPhrase] = useState("");
   const [sendStep, setSendStep] = useState<SendStep>("compose");
   const [sendTo, setSendTo] = useState("");
   const [sendAmount, setSendAmount] = useState("");
@@ -134,6 +135,7 @@ export function App({
     setLocalOutgoing([]);
     setNetworkError("");
     setWalletSheet(null);
+    setRecoveryPhrase("");
     setPrepared(null);
     setSubmitResult(null);
     setSendStep("compose");
@@ -480,6 +482,28 @@ export function App({
     }
   }
 
+  async function revealRecoveryPhrase() {
+    setBusy(true);
+    setError("");
+    setRecoveryPhrase("");
+    try {
+      const recovery = await vault.revealRecovery();
+      if (recovery.address !== address) throw new Error("Device authentication returned a different wallet.");
+      setRecoveryPhrase(recovery.mnemonic);
+      setWalletSheet("recovery");
+    } catch (reason) {
+      setError(errorMessage(reason));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function closeRecoveryPhrase() {
+    setRecoveryPhrase("");
+    setWalletSheet(null);
+    setError("");
+  }
+
   const statusLabel = !unlocked ? "Authentication required"
     : !networkStatus ? "Connecting to ZKAS mainnet"
     : networkStatus?.missing_history ? "History incomplete — do not spend"
@@ -562,7 +586,7 @@ export function App({
                 <article><ShieldCheck /><div><strong>Verified payments</strong><span>The pinned signer checks recipient, amount, change and fee before any mainnet signature.</span></div></article>
               </div>
               <div className="privacy-disclosure"><strong>Hosted-service privacy</strong><span>wallet.zkas.info receives the full viewing key and a random wallet token. It can observe this wallet’s balance and activity, but never receives spend authority.</span></div>
-              {hasWallet && <div className="vault-controls"><button className="secondary-action" type="button" onClick={unlocked ? lockWallet : unlockWallet} disabled={busy}>{unlocked ? <LockKeyhole size={18} /> : <Fingerprint size={18} />} {unlocked ? "Lock wallet" : "Unlock wallet"}</button><button className="danger-action" type="button" onClick={() => { setError(""); setRemoveOpen(true); }}><Trash2 size={18} /> Remove wallet from device</button></div>}
+              {hasWallet && <div className="vault-controls"><button className="secondary-action" type="button" onClick={revealRecoveryPhrase} disabled={busy}>{busy ? <LoaderCircle className="spin" size={18} /> : <KeyRound size={18} />} View recovery phrase</button><button className="secondary-action" type="button" onClick={unlocked ? lockWallet : unlockWallet} disabled={busy}>{unlocked ? <LockKeyhole size={18} /> : <Fingerprint size={18} />} {unlocked ? "Lock wallet" : "Unlock wallet"}</button><button className="danger-action" type="button" onClick={() => { setError(""); setRemoveOpen(true); }}><Trash2 size={18} /> Remove wallet from device</button></div>}
             </section>
           )}
         </div>
@@ -589,7 +613,9 @@ export function App({
           </section></div>
         )}
 
-        {walletSheet === "receive" && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="receive-title"><SheetClose onClose={() => setWalletSheet(null)} /><div className="setup-icon"><ArrowDownLeft /></div><span className="eyebrow">RECEIVE ON MAINNET</span><h2 id="receive-title">Your ZKAS address</h2><p>Send only ZKAS on the ZKAS mainnet to this address. Verify the first and last characters before using it.</p><button className="full-address" type="button" onClick={copyAddress}>{address}</button>{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" onClick={copyAddress}>{copied ? <Check size={18} /> : <Copy size={18} />} {copied ? "Copied" : "Copy address"}</button></section></div>}
+        {walletSheet === "receive" && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="receive-title"><SheetClose onClose={() => setWalletSheet(null)} /><div className="setup-icon"><ArrowDownLeft /></div><span className="eyebrow">RECEIVE ON MAINNET</span><h2 id="receive-title">Your ZKAS address</h2><p>Your complete receiving address is displayed below. Tap the address or the Copy button, then verify its first and last characters before sending.</p><button className="full-address" type="button" onClick={copyAddress}>{address}</button>{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" onClick={copyAddress}>{copied ? <Check size={18} /> : <Copy size={18} />} {copied ? "Address copied" : "Copy full address"}</button></section></div>}
+
+        {walletSheet === "recovery" && recoveryPhrase && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="recovery-title"><SheetClose onClose={closeRecoveryPhrase} /><span className="eyebrow">PRIVATE WALLET BACKUP</span><h2 id="recovery-title">Your recovery phrase</h2><div className="seed-warning"><ShieldCheck /> Anyone who sees these words can take every ZKAS in this wallet. Keep them offline and never share a screenshot.</div><ol className="word-grid">{recoveryPhrase.split(" ").map((word, index) => <li key={`${word}-${index}`}><span>{index + 1}</span>{word}</li>)}</ol><p>Confirm that your written backup matches these 12 words in this exact order.</p><button className="primary-action" type="button" onClick={closeRecoveryPhrase}><Check size={18} /> I verified my backup</button></section></div>}
 
         {walletSheet === "send" && <div className="modal-backdrop"><section className="setup-sheet" role="dialog" aria-modal="true" aria-labelledby="send-title"><SheetClose disabled={sendStep === "preparing" || sendStep === "signing"} onClose={() => { setWalletSheet(null); setError(""); }} />
           {sendStep === "compose" && <><span className="eyebrow">LIVE MAINNET PAYMENT</span><h2 id="send-title">Send ZKAS</h2><p>Available: {formatSompi(spendableSompi)} ZKAS. The network fee is calculated before you approve the payment.</p><label className="field-label" htmlFor="send-address">Recipient address</label><textarea id="send-address" value={sendTo} onChange={(event) => { setSendTo(event.target.value.trim()); setError(""); }} rows={3} autoCapitalize="none" autoCorrect="off" autoComplete="off" spellCheck={false} placeholder="zkas:…" /><label className="field-label" htmlFor="send-amount">Amount in ZKAS</label><input id="send-amount" className="text-input" inputMode="decimal" value={sendAmount} onChange={(event) => { setSendAmount(event.target.value.replace(/[^0-9.]/g, "")); setError(""); }} placeholder="1.00" />{error && <div className="form-error" role="alert">{error}</div>}<button className="primary-action" type="button" disabled={!sendTo || !sendAmount} onClick={prepareSend}>Calculate fee and review <ChevronRight size={18} /></button></>}

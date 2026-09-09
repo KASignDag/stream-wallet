@@ -55,6 +55,7 @@ function dependencies(exists = false) {
       birthdayDaa: 123456,
     }),
     authorize: vi.fn().mockResolvedValue({ address: ADDRESS, accountSeedHex: ACCOUNT_SEED }),
+    revealRecovery: vi.fn().mockResolvedValue({ address: ADDRESS, mnemonic: PHRASE }),
     remove: vi.fn().mockResolvedValue({ removed: true }),
   };
   const signer: SignerApi = {
@@ -163,6 +164,19 @@ describe("Stream Wallet mainnet flow", () => {
     expect(receive).toBeEnabled();
     fireEvent.click(receive);
     expect(screen.getByText(ADDRESS)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /copy full address/i })).toBeInTheDocument();
+  });
+
+  it("requires native authentication before displaying the recovery phrase", async () => {
+    const { vault, signer, network } = dependencies(true);
+    render(<App vault={vault} signer={signer} network={network} />);
+    fireEvent.click(await screen.findByRole("button", { name: /security/i }));
+    fireEvent.click(screen.getByRole("button", { name: /view recovery phrase/i }));
+    await waitFor(() => expect(vault.revealRecovery).toHaveBeenCalledTimes(1));
+    expect(await screen.findByRole("heading", { name: /your recovery phrase/i })).toBeInTheDocument();
+    expect(screen.getByText("alpha")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /i verified my backup/i }));
+    expect(screen.queryByText("alpha")).not.toBeInTheDocument();
   });
 
   it("labels maturing change and keeps Send disabled until it is spendable", async () => {

@@ -110,18 +110,22 @@ public class SecureVaultPlugin: CAPPlugin {
     }
 
     @objc public func unlock(_ call: CAPPluginCall) {
-        openVault(call, removeAfter: false, authorizeSpend: false)
+        openVault(call, removeAfter: false, authorizeSpend: false, revealRecovery: false)
     }
 
     @objc public func authorize(_ call: CAPPluginCall) {
-        openVault(call, removeAfter: false, authorizeSpend: true)
+        openVault(call, removeAfter: false, authorizeSpend: true, revealRecovery: false)
+    }
+
+    @objc public func revealRecovery(_ call: CAPPluginCall) {
+        openVault(call, removeAfter: false, authorizeSpend: false, revealRecovery: true)
     }
 
     @objc public func remove(_ call: CAPPluginCall) {
-        openVault(call, removeAfter: true, authorizeSpend: false)
+        openVault(call, removeAfter: true, authorizeSpend: false, revealRecovery: false)
     }
 
-    private func openVault(_ call: CAPPluginCall, removeAfter: Bool, authorizeSpend: Bool) {
+    private func openVault(_ call: CAPPluginCall, removeAfter: Bool, authorizeSpend: Bool, revealRecovery: Bool) {
         let defaults = UserDefaults.standard
         guard let encoded = defaults.string(forKey: payloadKey),
               let combined = Data(base64Encoded: encoded),
@@ -135,7 +139,9 @@ public class SecureVaultPlugin: CAPPlugin {
             do {
                 let reason = removeAfter
                     ? "Confirm permanent removal of Stream Wallet"
-                    : authorizeSpend ? "Authorize this ZKAS mainnet payment" : "Unlock Stream Wallet"
+                    : authorizeSpend ? "Authorize this ZKAS mainnet payment"
+                    : revealRecovery ? "Reveal your Stream Wallet recovery phrase"
+                    : "Unlock Stream Wallet"
                 var keyData = try self.loadKey(reason: reason)
                 defer { keyData.resetBytes(in: 0..<keyData.count) }
                 let key = SymmetricKey(data: keyData)
@@ -178,6 +184,11 @@ public class SecureVaultPlugin: CAPPlugin {
                     self.resolveOnMain(call, [
                         "address": address,
                         "accountSeedHex": accountSeedHex
+                    ])
+                } else if revealRecovery {
+                    self.resolveOnMain(call, [
+                        "address": address,
+                        "mnemonic": mnemonic
                     ])
                 } else {
                     self.resolveOnMain(call, [

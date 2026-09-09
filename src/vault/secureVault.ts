@@ -24,6 +24,11 @@ export interface VaultAuthorizeResult {
   accountSeedHex: string;
 }
 
+export interface VaultRecoveryResult {
+  address: string;
+  mnemonic: string;
+}
+
 export interface VaultRemoveResult {
   removed: boolean;
 }
@@ -40,6 +45,7 @@ export interface SecureVaultApi {
   }): Promise<VaultSaveResult>;
   unlock(): Promise<VaultUnlockResult>;
   authorize(): Promise<VaultAuthorizeResult>;
+  revealRecovery(): Promise<VaultRecoveryResult>;
   remove(): Promise<VaultRemoveResult>;
 }
 
@@ -48,6 +54,7 @@ interface NativeSecureVaultPlugin {
   save(options: Parameters<SecureVaultApi["save"]>[0]): Promise<VaultSaveResult>;
   unlock(): Promise<VaultUnlockResult>;
   authorize(): Promise<VaultAuthorizeResult>;
+  revealRecovery(): Promise<VaultRecoveryResult>;
   remove(): Promise<VaultRemoveResult>;
 }
 
@@ -80,6 +87,10 @@ export const secureVault: SecureVaultApi = {
   async authorize() {
     if (!Capacitor.isNativePlatform()) nativeOnly();
     return NativeSecureVault.authorize();
+  },
+  async revealRecovery() {
+    if (!Capacitor.isNativePlatform()) nativeOnly();
+    return NativeSecureVault.revealRecovery();
   },
   async remove() {
     if (!Capacitor.isNativePlatform()) nativeOnly();
