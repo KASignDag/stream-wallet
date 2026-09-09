@@ -242,37 +242,44 @@ public class SecureVaultPlugin extends Plugin {
     ) {
         FragmentActivity activity = (FragmentActivity) getActivity();
         Executor executor = ContextCompat.getMainExecutor(getContext());
-        BiometricPrompt prompt = new BiometricPrompt(activity, executor, new BiometricPrompt.AuthenticationCallback() {
-            @Override
-            public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+        executor.execute(() -> {
+            try {
+                BiometricPrompt prompt = new BiometricPrompt(activity, executor, new BiometricPrompt.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                        if (onFailure != null) onFailure.run();
+                        call.reject(errString.toString(), "authentication_cancelled");
+                    }
+
+                    @Override
+                    public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                        Cipher authenticated = result.getCryptoObject() == null ? null : result.getCryptoObject().getCipher();
+                        if (authenticated == null) {
+                            if (onFailure != null) onFailure.run();
+                            call.reject("Device authentication returned no cryptographic authorization.", "authentication_failed");
+                            return;
+                        }
+                        onSuccess.accept(authenticated);
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        // The system prompt stays open and allows another attempt.
+                    }
+                });
+
+                BiometricPrompt.PromptInfo.Builder info = new BiometricPrompt.PromptInfo.Builder()
+                        .setTitle(title)
+                        .setSubtitle(subtitle)
+                        .setConfirmationRequired(true)
+                        .setAllowedAuthenticators(authenticators());
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) info.setNegativeButtonText("Cancel");
+                prompt.authenticate(info.build(), new BiometricPrompt.CryptoObject(cipher));
+            } catch (Exception error) {
                 if (onFailure != null) onFailure.run();
-                call.reject(errString.toString(), "authentication_cancelled");
-            }
-
-            @Override
-            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
-                Cipher authenticated = result.getCryptoObject() == null ? null : result.getCryptoObject().getCipher();
-                if (authenticated == null) {
-                    if (onFailure != null) onFailure.run();
-                    call.reject("Device authentication returned no cryptographic authorization.", "authentication_failed");
-                    return;
-                }
-                onSuccess.accept(authenticated);
-            }
-
-            @Override
-            public void onAuthenticationFailed() {
-                // The system prompt stays open and allows another attempt.
+                call.reject("Device authentication could not be started.", "authentication_failed", error);
             }
         });
-
-        BiometricPrompt.PromptInfo.Builder info = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle(title)
-                .setSubtitle(subtitle)
-                .setConfirmationRequired(true)
-                .setAllowedAuthenticators(authenticators());
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) info.setNegativeButtonText("Cancel");
-        prompt.authenticate(info.build(), new BiometricPrompt.CryptoObject(cipher));
     }
 
     private SecretKey generateKey() throws Exception {
