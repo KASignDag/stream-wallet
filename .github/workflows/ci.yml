@@ -23,6 +23,8 @@ jobs:
 
   android:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,6 +42,19 @@ jobs:
       - name: Build community-test APK
         working-directory: android
         run: chmod +x gradlew && ./gradlew assembleDebug
+      - name: Prepare APK download
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Stream-Wallet-Android-Community-Test.apk
+      - name: Publish public prerelease
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v0.3.11-android-beta Stream-Wallet-Android-Community-Test.apk \
+            --target "${{ github.sha }}" \
+            --prerelease \
+            --title "Stream Wallet Android Community Test" \
+            --notes "Public Android community-test build. This is a development APK for limited mainnet testing, not a production release. Use only 1–2 ZKAS, independently save and verify your recovery phrase, and never share it. Android may ask you to allow installation from this source."
       - name: Upload community-test APK
         uses: actions/upload-artifact@v4
         with:
