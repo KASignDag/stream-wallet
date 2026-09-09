@@ -16,6 +16,9 @@ import {
 } from "./network/mainnet";
 import { secureVault, type SecureVaultApi, type VaultStatus } from "./vault/secureVault";
 import { qrScanner, type QrScannerApi } from "./scanner/qrScanner";
+import {
+  localOutgoingHistory, type LocalOutgoingHistoryApi, type LocalOutgoingRecord,
+} from "./history/localOutgoingHistory";
 import { confirmationMatches, normalizeMnemonic, pickConfirmationPositions, shortAddress } from "./wallet/setup";
 
 type Tab = "home" | "activity" | "security";
@@ -51,6 +54,7 @@ interface AppProps {
   signer?: SignerApi;
   network?: NetworkApi;
   scanner?: QrScannerApi;
+  outgoingHistory?: LocalOutgoingHistoryApi;
   confirmationPositions?: number[];
 }
 
@@ -73,6 +77,7 @@ export function App({
   signer = defaultSigner,
   network = mainnetApi,
   scanner = qrScanner,
+  outgoingHistory = localOutgoingHistory,
   confirmationPositions,
 }: AppProps) {
   const [tab, setTab] = useState<Tab>("home");
@@ -82,6 +87,7 @@ export function App({
   const [connection, setConnection] = useState<WalletConnection | null>(null);
   const [networkStatus, setNetworkStatus] = useState<WalletStatus | null>(null);
   const [history, setHistory] = useState<WalletHistory | null>(null);
+  const [localOutgoing, setLocalOutgoing] = useState<LocalOutgoingRecord[]>([]);
   const [syncing, setSyncing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [setupStep, setSetupStep] = useState<SetupStep | null>(null);
@@ -125,6 +131,7 @@ export function App({
     setConnection(null);
     setNetworkStatus(null);
     setHistory(null);
+    setLocalOutgoing([]);
     setNetworkError("");
     setWalletSheet(null);
     setPrepared(null);
@@ -167,6 +174,17 @@ export function App({
   const hasSpendableFunds = BigInt(spendableSompi || "0") > 0n;
   const hasMaturingFunds = BigInt(maturingSompi || "0") > 0n;
   const walletReady = Boolean(networkStatus?.synced && (networkStatus.spend_ready ?? true) && !networkStatus.missing_history);
+  const activityRows = [
+    ...(history?.rows ?? []).map((row) => ({
+      ...row,
+      amountSompi: String(row.amountSompi),
+      feeSompi: String(row.feeSompi),
+      source: "service" as const,
+    })),
+    ...localOutgoing.map((row) => ({ ...row, daaScore: 0, source: "local" as const })),
+  ]
+    .filter((row, index, rows) => rows.findIndex((candidate) => candidate.txid === row.txid) === index)
+    .sort((left, right) => right.timestamp - left.timestamp);
 
   const refreshWallet = useCallback(async (wallet: WalletConnection, registerIfMissing = true) => {
     if (syncInFlight.current) return;
@@ -202,6 +220,10 @@ export function App({
       setSyncing(false);
     }
   }, [network]);
+
+  useEffect(() => {
+    setLocalOutgoing(unlocked && address ? outgoingHistory.load(address) : []);
+  }, [address, outgoingHistory, unlocked]);
 
   useEffect(() => {
     if (!unlocked || !connection) return;
@@ -341,6 +363,7 @@ export function App({
     try {
       const result = await vault.remove();
       if (!result.removed) throw new Error("The vault did not confirm removal.");
+      if (address) outgoingHistory.removeWallet(address);
       lockWallet();
       setVaultStatus((current) => ({
         available: current?.available ?? true, exists: false,
@@ -429,6 +452,15 @@ export function App({
         amount_sompi: Number(prepared.amountSompi),
         fee_sompi: Number(prepared.feeSompi),
       });
+      setLocalOutgoing(outgoingHistory.add({
+        kind: "sent",
+        txid: result.txid,
+        walletAddress: connection.address,
+        recipient: prepared.to,
+        amountSompi: prepared.amountSompi.toString(),
+        feeSompi: prepared.feeSompi.toString(),
+        timestamp: Date.now(),
+      }));
       setSendStep("success");
       await refreshWallet(connection, false);
     } catch (reason) {
@@ -456,7 +488,7 @@ export function App({
     : walletReady && !hasSpendableFunds && hasMaturingFunds ? "Change maturing · not yet spendable"
     : networkStatus.synced ? (walletReady ? "Ready on ZKAS mainnet" : "Synced · preparing spend state")
     : "Synchronizing mainnet";
-  const hasUnlistedFunds = unlocked && !history?.rows.length && BigInt(balanceSompi || "0") > 0n;
+  const hasUnlistedFunds = unlocked && activityRows.length === 0 && BigInt(balanceSompi || "0") > 0n;
 
   return (
     <main className="page-shell">
@@ -514,9 +546,10 @@ export function App({
           {tab === "activity" && (
             <section className="activity-view">
               <span className="eyebrow">MAINNET ACTIVITY</span><h1>Wallet history</h1>
+              <div className="history-notice"><strong>Outgoing transactions only</strong><span>Payments sent from this device after this update are saved here. Incoming transaction details are unavailable until the hosted ZKAS service provides itemized history.</span></div>
               {!unlocked && <div className="empty-state"><Activity size={36} /><h2>Unlock to view</h2><p>History is private wallet data and is cleared from the screen when the app locks.</p></div>}
-              {unlocked && !history?.rows.length && <div className="empty-state"><Activity size={36} /><h2>{hasUnlistedFunds ? "Balance detected" : "No activity yet"}</h2><p>{syncing ? "The wallet is synchronizing." : hasUnlistedFunds ? `${formatSompi(balanceSompi)} ZKAS is visible in this wallet, but the service has not provided an itemized transaction record.` : "Mainnet transactions will appear here after they are scanned."}</p></div>}
-              {unlocked && history && history.rows.length > 0 && <div className="history-list">{history.rows.slice(0, 25).map((row) => <article key={`${row.txid}-${row.kind}`}><span className={`history-icon ${row.kind}`}><ArrowDownLeft /></span><div><strong>{row.kind === "sent" ? "Sent" : row.kind === "coinbase" ? "Mined" : "Received"}</strong><small>{row.timestamp > 0 ? new Date(row.timestamp).toLocaleString() : `DAA ${row.daaScore}`}</small></div><b>{row.kind === "sent" ? "−" : "+"}{formatSompi(row.amountSompi)} ZKAS</b></article>)}</div>}
+              {unlocked && activityRows.length === 0 && <div className="empty-state"><Activity size={36} /><h2>{hasUnlistedFunds ? "Balance detected" : "No outgoing activity yet"}</h2><p>{syncing ? "The wallet is synchronizing." : hasUnlistedFunds ? `${formatSompi(balanceSompi)} ZKAS is visible in this wallet. Incoming itemized records are not currently available.` : "Payments sent from this device will appear here."}</p></div>}
+              {unlocked && activityRows.length > 0 && <div className="history-list">{activityRows.slice(0, 25).map((row) => <article key={`${row.txid}-${row.kind}`}><span className={`history-icon ${row.kind}`}><ArrowDownLeft /></span><div><strong>{row.kind === "sent" ? "Sent" : row.kind === "coinbase" ? "Mined" : "Received"}</strong><small>{row.timestamp > 0 ? new Date(row.timestamp).toLocaleString() : `DAA ${row.daaScore}`}</small><small>{row.kind === "sent" && row.source === "local" ? `Fee ${formatSompi(row.feeSompi)} ZKAS · saved on this device` : row.txid}</small></div><b>{row.kind === "sent" ? "−" : "+"}{formatSompi(row.amountSompi)} ZKAS</b></article>)}</div>}
             </section>
           )}
 

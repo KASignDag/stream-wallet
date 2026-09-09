@@ -5,6 +5,7 @@ import { App, type NetworkApi, type SignerApi } from "./App";
 import type { PreparedPayment, WalletStatus } from "./network/mainnet";
 import type { SecureVaultApi } from "./vault/secureVault";
 import type { QrScannerApi } from "./scanner/qrScanner";
+import type { LocalOutgoingHistoryApi } from "./history/localOutgoingHistory";
 
 afterEach(cleanup);
 
@@ -79,7 +80,7 @@ function dependencies(exists = false) {
     history: vi.fn().mockResolvedValue({ recoverableHistory: true, total: 0, rows: [] }),
     prepare: vi.fn().mockResolvedValue(prepared),
     sign: vi.fn().mockResolvedValue([{ index: 0, sig: "signature" }]),
-    submit: vi.fn().mockResolvedValue({ txid: "tx-1", amount_sompi: 100_000_000, fee_sompi: 1_900_000 }),
+    submit: vi.fn().mockResolvedValue({ txid: "12".repeat(32), amount_sompi: 100_000_000, fee_sompi: 1_900_000 }),
   };
   return { vault, signer, network, prepared };
 }
@@ -184,7 +185,8 @@ describe("Stream Wallet mainnet flow", () => {
     await screen.findByText("Ready on ZKAS mainnet");
     fireEvent.click(screen.getByRole("button", { name: "Activity" }));
     expect(await screen.findByRole("heading", { name: "Balance detected" })).toBeInTheDocument();
-    expect(screen.getByText(/2 ZKAS is visible.*not provided an itemized transaction record/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 ZKAS is visible.*incoming itemized records are not currently available/i)).toBeInTheDocument();
+    expect(screen.getByText("Outgoing transactions only")).toBeInTheDocument();
   });
 
   it("uses a valid scanned address only to prefill the unsigned payment form", async () => {
@@ -227,7 +229,12 @@ describe("Stream Wallet mainnet flow", () => {
 
   it("requires exact fee review and fresh device authorization before broadcasting", async () => {
     const { vault, signer, network, prepared } = dependencies(true);
-    render(<App vault={vault} signer={signer} network={network} />);
+    const outgoingHistory: LocalOutgoingHistoryApi = {
+      load: vi.fn().mockReturnValue([]),
+      add: vi.fn().mockImplementation((record) => [record]),
+      removeWallet: vi.fn(),
+    };
+    render(<App vault={vault} signer={signer} network={network} outgoingHistory={outgoingHistory} />);
     fireEvent.click(await screen.findByRole("button", { name: /unlock wallet/i }));
     const send = await screen.findByRole("button", { name: "Send" });
     await waitFor(() => expect(send).toBeEnabled());
@@ -243,7 +250,19 @@ describe("Stream Wallet mainnet flow", () => {
     await waitFor(() => expect(network.sign).toHaveBeenCalledWith(ACCOUNT_SEED, prepared));
     expect(vault.authorize).toHaveBeenCalledOnce();
     expect(network.submit).toHaveBeenCalledWith(TOKEN, "session-1", [{ index: 0, sig: "signature" }]);
+    expect(outgoingHistory.add).toHaveBeenCalledWith(expect.objectContaining({
+      kind: "sent",
+      txid: "12".repeat(32),
+      walletAddress: ADDRESS,
+      recipient: RECIPIENT,
+      amountSompi: "100000000",
+      feeSompi: "1900000",
+      timestamp: expect.any(Number),
+    }));
     expect(await screen.findByRole("heading", { name: /payment sent/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    fireEvent.click(screen.getByRole("button", { name: "Activity" }));
+    expect(await screen.findByText("saved on this device", { exact: false })).toBeInTheDocument();
   });
 
   it("supports local lock and authenticated permanent removal", async () => {

@@ -1,4 +1,4 @@
-# Version 0.3.6 test status
+# Version 0.3.7 test status
 
 This record contains no recovery phrase, secret key or complete wallet address.
 
@@ -28,6 +28,9 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - iOS locking follows the true background event rather than temporary inactive states such as presenting the in-app camera.
 - Amount entry accepts either `0.05` or `.05` and converts both to exact integer sompi.
 - Maturing-only funds are labeled as unavailable and cannot open the Send flow.
+- Successful outgoing payments are saved locally with exact amount, fee, recipient, time and transaction ID.
+- Activity clearly states that only outgoing transactions sent after this update appear until the hosted service provides itemized history.
+- Local and hosted records are deduplicated by transaction ID, and local records are deleted with the wallet.
 - Capacitor 8 migration settings are present for iOS and Android.
 - The iOS app-switcher privacy cover is attached to the active scene window.
 - Personal Apple development-team settings and signing assets are absent from the handoff source.
