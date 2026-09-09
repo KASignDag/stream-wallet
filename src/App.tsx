@@ -97,6 +97,7 @@ export function App({
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
   const syncInFlight = useRef(false);
   const lockEpoch = useRef(0);
+  const screenContent = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -179,6 +180,10 @@ export function App({
     const timer = globalThis.setInterval(() => void refreshWallet(connection, false), 10_000);
     return () => clearInterval(timer);
   }, [connection, refreshWallet, unlocked]);
+
+  useEffect(() => {
+    if (screenContent.current) screenContent.current.scrollTop = 0;
+  }, [tab]);
 
   function resetSensitiveSetup() {
     setDraft(null);
@@ -400,6 +405,7 @@ export function App({
     : !networkStatus?.node_connected ? "Mainnet service offline"
     : networkStatus.synced ? (walletReady ? "Ready on ZKAS mainnet" : "Synced · preparing spend state")
     : "Synchronizing mainnet";
+  const hasUnlistedFunds = unlocked && !history?.rows.length && BigInt(balanceSompi || "0") > 0n;
 
   return (
     <main className="page-shell">
@@ -416,7 +422,7 @@ export function App({
         </div>
         {(error || networkError) && setupStep === null && !removeOpen && walletSheet === null && <div className="global-error" role="alert">{error || networkError}</div>}
 
-        <div className="screen-content">
+        <div className="screen-content" ref={screenContent}>
           {tab === "home" && (
             <>
               <section className="balance-card">
@@ -458,7 +464,7 @@ export function App({
             <section className="activity-view">
               <span className="eyebrow">MAINNET ACTIVITY</span><h1>Wallet history</h1>
               {!unlocked && <div className="empty-state"><Activity size={36} /><h2>Unlock to view</h2><p>History is private wallet data and is cleared from the screen when the app locks.</p></div>}
-              {unlocked && !history?.rows.length && <div className="empty-state"><Activity size={36} /><h2>No activity yet</h2><p>{syncing ? "The wallet is synchronizing." : "Mainnet transactions will appear here after they are scanned."}</p></div>}
+              {unlocked && !history?.rows.length && <div className="empty-state"><Activity size={36} /><h2>{hasUnlistedFunds ? "Balance detected" : "No activity yet"}</h2><p>{syncing ? "The wallet is synchronizing." : hasUnlistedFunds ? `${formatSompi(balanceSompi)} ZKAS is visible in this wallet, but the service has not provided an itemized transaction record.` : "Mainnet transactions will appear here after they are scanned."}</p></div>}
               {unlocked && history && history.rows.length > 0 && <div className="history-list">{history.rows.slice(0, 25).map((row) => <article key={`${row.txid}-${row.kind}`}><span className={`history-icon ${row.kind}`}><ArrowDownLeft /></span><div><strong>{row.kind === "sent" ? "Sent" : row.kind === "coinbase" ? "Mined" : "Received"}</strong><small>{row.timestamp > 0 ? new Date(row.timestamp).toLocaleString() : `DAA ${row.daaScore}`}</small></div><b>{row.kind === "sent" ? "−" : "+"}{formatSompi(row.amountSompi)} ZKAS</b></article>)}</div>}
             </section>
           )}

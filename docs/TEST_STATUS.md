@@ -1,4 +1,4 @@
-# Version 0.3 test status
+# Version 0.3.1 test status
 
 This record contains no recovery phrase, secret key or complete wallet address.
 
@@ -10,6 +10,7 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - A 1 ZKAS mainnet receive appeared in the official wallet and later synchronized into Stream Wallet.
 - The synchronized wallet showed 1 total and 1 maturing while the spendable balance remained 0, as expected during maturity.
 - Automatic status polling updated the balance without a manual refresh button.
+- The hosted service returned no itemized rows for the received coin even though it reported the correct balance.
 
 ## Verified in the version 0.3 source review
 
@@ -17,6 +18,8 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - The production bundle builds and the pinned signer hash check passes.
 - The npm dependency audit reports zero known vulnerabilities.
 - iPhone safe-area insets are applied to the header, banner, content, sheets and bottom navigation.
+- Tab changes reset the shared content area to the top.
+- A nonzero balance with empty itemized history is identified as detected funds rather than incorrectly claiming there has been no activity.
 - Capacitor 8 migration settings are present for iOS and Android.
 - The iOS app-switcher privacy cover is attached to the active scene window.
 - Personal Apple development-team settings and signing assets are absent from the handoff source.

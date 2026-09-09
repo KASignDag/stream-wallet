@@ -163,6 +163,27 @@ describe("Stream Wallet mainnet flow", () => {
     expect(screen.getByText(ADDRESS)).toBeInTheDocument();
   });
 
+  it("reports a detected balance honestly when itemized history is unavailable", async () => {
+    const { vault, signer, network } = dependencies(true);
+    render(<App vault={vault} signer={signer} network={network} />);
+    fireEvent.click(await screen.findByRole("button", { name: /unlock wallet/i }));
+    await screen.findByText("Ready on ZKAS mainnet");
+    fireEvent.click(screen.getByRole("button", { name: "Activity" }));
+    expect(await screen.findByRole("heading", { name: "Balance detected" })).toBeInTheDocument();
+    expect(screen.getByText(/2 ZKAS is visible.*not provided an itemized transaction record/i)).toBeInTheDocument();
+  });
+
+  it("returns shared content to the top when changing tabs", async () => {
+    const { vault, signer, network } = dependencies(true);
+    const { container } = render(<App vault={vault} signer={signer} network={network} />);
+    const content = container.querySelector<HTMLElement>(".screen-content");
+    expect(content).not.toBeNull();
+    if (!content) return;
+    content.scrollTop = 250;
+    fireEvent.click(screen.getByRole("button", { name: "Security" }));
+    expect(content.scrollTop).toBe(0);
+  });
+
   it("requires exact fee review and fresh device authorization before broadcasting", async () => {
     const { vault, signer, network, prepared } = dependencies(true);
     render(<App vault={vault} signer={signer} network={network} />);
