@@ -545,10 +545,12 @@ export function App({
                 {unlocked && address && <div className="address-preview"><span>Account 0</span><strong title={address}>{shortAddress(address)}</strong></div>}
               </section>
 
-              <div className="quick-actions" aria-label="Wallet actions">
-                <button type="button" disabled={!unlocked} onClick={() => { setError(""); setWalletSheet("receive"); }}><span><ArrowDownLeft size={20} /></span>Receive</button>
-                <button type="button" disabled={!unlocked || !walletReady || !hasSpendableFunds} onClick={() => openSend()}><span><ArrowUpRight size={20} /></span>Send</button>
-              </div>
+              {(!hasWallet || unlocked) && (
+                <div className="quick-actions" aria-label="Wallet actions">
+                  <button type="button" disabled={!unlocked} onClick={() => { setError(""); setWalletSheet("receive"); }}><span><ArrowDownLeft size={20} /></span>Receive</button>
+                  <button type="button" disabled={!unlocked || !walletReady || !hasSpendableFunds} onClick={() => openSend()}><span><ArrowUpRight size={20} /></span>Send</button>
+                </div>
+              )}
 
               {!hasWallet && (
                 <>
@@ -556,7 +558,7 @@ export function App({
                   {vaultStatus && !vaultStatus.available && <p className="native-note">Secure setup requires the installed iPhone or Android app with device authentication enabled.</p>}
                 </>
               )}
-              {hasWallet && !unlocked && <button className="primary-action" type="button" disabled={busy} onClick={unlockWallet}>{busy ? <LoaderCircle className="spin" size={19} /> : <Fingerprint size={19} />} Unlock wallet</button>}
+              {hasWallet && !unlocked && <button className="primary-action unlock-action" type="button" disabled={busy} onClick={unlockWallet}>{busy ? <LoaderCircle className="spin" size={19} /> : <Fingerprint size={19} />} Unlock wallet</button>}
               {hasWallet && unlocked && <button className="secondary-action" type="button" onClick={lockWallet}><LockKeyhole size={18} /> Lock wallet</button>}
 
               <section className="insight-card">

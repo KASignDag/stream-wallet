@@ -110,6 +110,14 @@ describe("Stream Wallet mainnet flow", () => {
     expect(screen.queryByRole("button", { name: "Request" })).not.toBeInTheDocument();
   });
 
+  it("shows a clean locked state without inactive wallet actions", async () => {
+    const { vault, signer, network } = dependencies(true);
+    render(<App vault={vault} signer={signer} network={network} />);
+    expect(await screen.findByRole("button", { name: /unlock wallet/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Receive" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Send" })).not.toBeInTheDocument();
+  });
+
   it("creates official account material and saves only after backup confirmation", async () => {
     const { vault, signer, network } = dependencies();
     await openSetup(vault, signer, network);
