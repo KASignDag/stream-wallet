@@ -1,4 +1,4 @@
-# Version 0.3.9 test status
+# Version 0.3.10 test status
 
 This record contains no recovery phrase, secret key or complete wallet address.
 
@@ -31,7 +31,8 @@ This record contains no recovery phrase, secret key or complete wallet address.
 - Successful outgoing payments are saved locally with exact amount, fee, recipient, time and transaction ID.
 - The encrypted native vault exposes the recovery phrase only through a dedicated device-authenticated action; the app clears the displayed phrase when its sheet closes or the wallet locks.
 - Receive displays the complete account 0 address and provides an explicit full-address copy action.
-- The unavailable payment-request placeholder is hidden during the mainnet pilot; Home presents only Receive, Send and Scan.
+- The unavailable payment-request placeholder is hidden during the mainnet pilot; Home presents only Receive and Send.
+- Send allows the recipient address to be typed or filled with a validated ZKAS mainnet QR scan.
 - Activity clearly states that only outgoing transactions sent after this update appear until the hosted service provides itemized history.
 - Local and hosted records are deduplicated by transaction ID, and local records are deleted with the wallet.
 - Capacitor 8 migration settings are present for iOS and Android.

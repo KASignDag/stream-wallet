@@ -103,9 +103,10 @@ describe("Stream Wallet mainnet flow", () => {
     render(<App vault={vault} signer={signer} network={network} />);
     expect(screen.getByText("Live ZKAS mainnet.")).toBeInTheDocument();
     expect(screen.getByText("ZKAS mainnet")).toBeInTheDocument();
-    for (const action of ["Receive", "Send", "Scan"]) {
+    for (const action of ["Receive", "Send"]) {
       expect(screen.getByRole("button", { name: action })).toBeDisabled();
     }
+    expect(screen.queryByRole("button", { name: "Scan" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Request" })).not.toBeInTheDocument();
   });
 
@@ -210,7 +211,8 @@ describe("Stream Wallet mainnet flow", () => {
     render(<App vault={vault} signer={signer} network={network} scanner={scanner} />);
     fireEvent.click(await screen.findByRole("button", { name: /unlock wallet/i }));
     await screen.findByText("Ready on ZKAS mainnet");
-    fireEvent.click(screen.getByRole("button", { name: "Scan" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    fireEvent.click(screen.getByRole("button", { name: /scan recipient qr code/i }));
     expect(await screen.findByDisplayValue(RECIPIENT)).toBeInTheDocument();
     expect(screen.getByLabelText("Amount in ZKAS")).toHaveValue("");
     expect(network.prepare).not.toHaveBeenCalled();
@@ -224,7 +226,8 @@ describe("Stream Wallet mainnet flow", () => {
     render(<App vault={vault} signer={signer} network={network} scanner={scanner} />);
     fireEvent.click(await screen.findByRole("button", { name: /unlock wallet/i }));
     await screen.findByText("Ready on ZKAS mainnet");
-    fireEvent.click(screen.getByRole("button", { name: "Scan" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    fireEvent.click(screen.getByRole("button", { name: /scan recipient qr code/i }));
     expect(await screen.findByText(/does not contain a complete ZKAS mainnet address/i)).toBeInTheDocument();
     expect(network.prepare).not.toHaveBeenCalled();
     expect(vault.authorize).not.toHaveBeenCalled();
